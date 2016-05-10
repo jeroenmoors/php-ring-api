@@ -7,6 +7,7 @@ class Ring {
 
     private $_urlSession    = '/clients_api/session';
     private $_urlDings      = '/clients_api/dings/active';
+    private $_urlDevices    = '/clients_api/ring_devices';
 
     private $_authToken     = null;
 
@@ -105,6 +106,15 @@ class Ring {
         } else {
             return false;
         }
+    }
+
+    function devices() {
+        $result = array();
+        $data = array();
+        $data['api_version'] = $this->_apiVersion;
+        $data['auth_token']  = $this->_authToken;
+        $response = $this->_httpCall('GET', $this->_urlDevices, $data);
+        return $response;
     }
 
     private function _arrayToUrlString($array) {
