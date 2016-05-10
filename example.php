@@ -4,8 +4,6 @@
     $username = 'YOUR EMAIL ADDRESS HERE';
     $password = 'YOUR RING.COM PASSWORD HERE';
     
-    include "../password.php";
-    
     $bell = new Ring();
     print "Authenticating...\n";
     $bell->authenticate($username, $password);
