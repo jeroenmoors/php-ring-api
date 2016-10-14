@@ -3,11 +3,13 @@
 class Ring {
     private $_apiProto      = 'https://';
     private $_apiHost       = "api.ring.com";
-    private $_apiVersion    = 8;
+    private $_apiVersion    = 9;
 
     private $_urlSession    = '/clients_api/session';
     private $_urlDings      = '/clients_api/dings/active';
     private $_urlDevices    = '/clients_api/ring_devices';
+    private $_urlHistory    = '/clients_api/doorbots/history';
+    private $_urlRecording  = '/clients_api/dings/{id}/recording';
 
     private $_authToken     = null;
 
@@ -39,6 +41,7 @@ class Ring {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_ENCODING , "gzip, deflate");
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
         /*
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -46,13 +49,17 @@ class Ring {
         curl_setopt($ch, CURLOPT_HEADER, 1);
         */
         $serverResponse = curl_exec($ch);
+        $httpCode       = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         //var_dump($serverResponse);
         curl_close ($ch);
-
+        
+        // Try JSON Decode
         $json = json_decode($serverResponse);
-
-        //var_dump($json);
-        return $json;
+        if ($json) {
+            return $json;
+        } else {
+            return $serverResponse;
+        }
     }
 
     function authenticate($username, $password) {
@@ -107,6 +114,25 @@ class Ring {
             return false;
         }
     }
+    
+    function history() {
+        $result = array();
+        $data = array();
+        $data['api_version'] = $this->_apiVersion;
+        $data['auth_token']  = $this->_authToken;
+        $data['limit']       = 30;
+        $response = $this->_httpCall('GET', $this->_urlHistory, $data);
+        return $response;
+    }
+
+    function recording($id) {
+        $result = array();
+        $data = array();
+        $data['api_version'] = $this->_apiVersion;
+        $data['auth_token']  = $this->_authToken;
+        $response = $this->_httpCall('GET', $this->_urlTemplate($this->_urlRecording, array('id' => $id)), $data);
+        return $response;
+    }
 
     function devices() {
         $result = array();
@@ -123,5 +149,12 @@ class Ring {
             $string .= urlencode($k).'='.urlencode($v).'&';
         }
         return substr($string,0, -1);
+    }
+    
+    private function _urlTemplate($url, $data) {
+        foreach($data as $k => $v) {
+            $url = str_replace('{'.$k.'}', $v, $url);
+        }
+        return $url;
     }
 }
