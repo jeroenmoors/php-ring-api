@@ -55,16 +55,18 @@ class Ring {
         
         // Try JSON Decode
         $json = json_decode($serverResponse);
-        if ($json) {
-            return $json;
-        } else {
+        
+        // If decoding fails, return original string
+        if (gettype($json) == NULL) {
             return $serverResponse;
         }
+			
+        return $json;
     }
 
     function authenticate($username, $password) {
         $postData['device[os]']                             = 'android';
-        $postData['device[hardware_id]']                    = '180940d0-7285-3366-8c64-6ea91491982c';
+        $postData['device[hardware_id]']                    = '180940d0-7285-3366-8c64-6ea91491982b';
         $postData['device[app_brand]']                      = 'ring';
         $postData['device[metadata][device_model]']         = 'VirtualBox';
         $postData['device[metadata][resolution]']           = '600x800';
@@ -92,6 +94,7 @@ class Ring {
         $data['api_version'] = $this->_apiVersion;
         $data['auth_token']  = $this->_authToken;
         $response = $this->_httpCall('GET', $this->_urlDings, $data);
+
         foreach($response as $status) {
             foreach($status as $k => $v) {
                 $result[$status->id][$k] = $v;
